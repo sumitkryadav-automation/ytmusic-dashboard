@@ -3,9 +3,11 @@
 An interactive analytics dashboard of the **daily Top 50 World chart** (18 May 2023 – 27 Nov 2024):
 **27,800 chart entries · 827 songs · 353 artists · 556 days**.
 
-**▶ Live demo: https://YOUR-USERNAME.github.io/ytmusic-dashboard/**
+[![Open the live dashboard](https://img.shields.io/badge/%E2%96%B6%20Open%20Live%20Dashboard-FF0033?style=for-the-badge)](https://sumitkryadav-automation.github.io/ytmusic-dashboard/)
 
-![Overview](screenshots/overview.jpg)
+**Live demo:** https://sumitkryadav-automation.github.io/ytmusic-dashboard/ · no login needed, works in any browser
+
+[![Overview](overview.jpg)](https://sumitkryadav-automation.github.io/ytmusic-dashboard/)
 
 ## Highlights
 
@@ -22,13 +24,13 @@ An interactive analytics dashboard of the **daily Top 50 World chart** (18 May 2
 
 | Home | Artists |
 | --- | --- |
-| ![Home](screenshots/home.jpg) | ![Artists](screenshots/artists.jpg) |
+| ![Home](home.jpg) | ![Artists](artists.jpg) |
 | **Songs** | **Filters** |
-| ![Songs](screenshots/songs.jpg) | ![Filters](screenshots/filters.jpg) |
+| ![Songs](songs.jpg) | ![Filters](filters.jpg) |
 
 **Dark mode**
 
-![Dark mode](screenshots/dark-mode.jpg)
+![Dark mode](dark-mode.jpg)
 
 ## Key insights from the data
 
@@ -58,4 +60,4 @@ The chart data is a public Top 50 World daily chart dataset originally published
 The YouTube Music name and logo are trademarks of Google LLC.
 
 ---
-Created by **Your Name** · [LinkedIn](https://www.linkedin.com/in/your-profile)
+Created by **Sumit Kumar Yadav** · [LinkedIn](https://www.linkedin.com/in/sumitkryadav-automation/)
