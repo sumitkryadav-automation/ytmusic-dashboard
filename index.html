@@ -272,6 +272,45 @@ svg { display:block; overflow:visible; }
 .hero .logo.stack { flex-direction:column; align-items:flex-start; gap:18px; }
 .hero .logo.stack .logo-img { height:96px; max-width:420px; filter:drop-shadow(0 10px 24px rgba(255,0,51,.18)); }
 .hero .logo.stack h1 { font-size:40px; }
+
+/* ---------- song focus: song vs all songs */
+.avgl { fill:none; stroke:var(--faint); stroke-width:2; stroke-dasharray:5 5; opacity:.85; animation:fade .8s both; }
+.lgd text { fill:var(--muted); font-size:10.5px; font-weight:650; }
+.cmps { display:flex; flex-direction:column; gap:12px; margin-top:6px; }
+.cmp-h { display:grid; grid-template-columns:1fr auto auto; align-items:baseline; gap:8px; margin-bottom:4px; }
+.cmp-h span { color:var(--muted); font-size:11.5px; font-weight:650; }
+.cmp-h b { font-size:15px; font-weight:800; font-variant-numeric:tabular-nums; }
+.cmp-h b.up { color:var(--red); }
+.cmp-h small { color:var(--faint); font-size:10.5px; min-width:70px; text-align:right; }
+.cmp-b { height:8px; border-radius:99px; background:var(--soft); overflow:hidden; margin-top:3px; }
+.cmp-b i { display:block; height:100%; border-radius:99px; transform-origin:left; animation:gx .9s cubic-bezier(.2,.8,.2,1) both; }
+.cmp-b i.s { background:linear-gradient(90deg,var(--red2),var(--red)); }
+.cmp-b i.a { background:var(--grey); }
+.cmp-legend { display:flex; align-items:center; gap:6px; margin-top:14px; color:var(--faint); font-size:10.5px; }
+.cmp-legend i { width:14px; height:6px; border-radius:9px; display:inline-block; margin-left:6px; }
+.cmp-legend i.s { background:var(--red); } .cmp-legend i.a { background:var(--grey); }
+
+/* ---------- artist spotlight */
+.asp-top { display:flex; align-items:center; gap:10px; }
+.asp-top b { display:block; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.asp-top small { color:var(--muted); font-size:10.5px; }
+.asp-st { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin:8px 0 2px; }
+.asp-st div { background:var(--soft); border-radius:9px; padding:5px 7px; }
+.asp-st span { display:block; color:var(--faint); font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; }
+.asp-st strong { font-size:16px; font-weight:800; font-variant-numeric:tabular-nums; }
+.asp-ch { margin:2px 0; }
+.asp-songs { display:flex; flex-direction:column; gap:3px; }
+.asp-songs button { display:grid; grid-template-columns:22px 1fr auto; gap:8px; align-items:center; padding:3px 6px; border-radius:8px; width:100%; transition:background .2s; }
+.asp-songs button:hover { background:var(--soft); }
+.asp-songs span { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:650; font-size:11.5px; }
+.asp-songs b { font-size:11px; color:var(--muted); }
+.ytm.quiet .cmp-b i, .ytm.quiet .avgl { animation:none; }
+/* table header always on top of scrolled rows */
+.tbl thead tr { animation:none; }
+.tbl thead { position:sticky; top:0; z-index:3; }
+.tbl th { background:var(--panel2); box-shadow:0 1px 0 var(--grid); }
+.ytm[data-theme=light] .tbl th { background:#fbfbfd; }
+.ytm:not([data-theme=light]) .tbl th { background:#23232c; }
 </style>
 </head>
 <body>
@@ -482,7 +521,7 @@ svg { display:block; overflow:visible; }
     data.forEach(function (p, i) {
       if (i % every === 0 || i === data.length - 1) s += '<text class="ax" x="' + X(i) + '" y="' + (h - 5) + '" text-anchor="middle">' + esc(p.label) + "</text>";
       var isMax = p.value === Math.max.apply(null, vals), isMin = p.value === Math.min.apply(null, vals), isLast = i === data.length - 1;
-      if (data.length <= 12 || isMax || isMin || isLast) s += '<text class="lb" x="' + X(i) + '" y="' + (Y(p.value) - 9) + '" text-anchor="' + (isLast && data.length > 12 ? "end" : "middle") + '">' + fmt(p.value) + "</text>";
+      if (opt.labels !== false && (data.length <= 12 || isMax || isMin || isLast)) s += '<text class="lb" x="' + X(i) + '" y="' + (Y(p.value) - 9) + '" text-anchor="' + (isLast && data.length > 12 ? "end" : "middle") + '">' + fmt(p.value) + "</text>";
       s += '<g class="hp"' + (act ? ' data-act="' + act + '" data-v="' + esc(p.key) + '" style="cursor:pointer"' : "") + tipAttr(p.label, [[opt.name || "Value", fmt(p.value)]]) + ">" +
         '<rect x="' + (X(i) - slot / 2) + '" y="0" width="' + slot + '" height="' + h + '" fill="transparent"/>' +
         '<line class="xh" x1="' + X(i) + '" x2="' + X(i) + '" y1="' + P.t + '" y2="' + (h - P.b) + '"/>' +
@@ -640,6 +679,7 @@ svg { display:block; overflow:visible; }
       a0 = a1;
     });
     var top = data.reduce(function (a, b) { return b.value > a.value ? b : a; });
+    if (sel != null) data.forEach(function (d) { if (d.key === sel) top = d; });
     var lg2 = '<div class="lg">' + data.map(function (d, i) {
       return '<button class="' + (sel != null && sel !== d.key ? "dim" : "") + '"' + (act ? ' data-act="' + act + '" data-v="' + d.key + '"' : "") + '><i style="background:' + colors[i] + '"></i><span>' + d.label + "</span><b>" + fP(d.value / tot, 1) + "</b></button>";
     }).join("") + "</div>";
@@ -648,8 +688,18 @@ svg { display:block; overflow:visible; }
   function bars(x, y, w, h, title, sub, items, fmt, act, sel) {
     var rows = Math.floor((h - 34) / 27);
     var max = Math.max.apply(null, items.map(function (d) { return d.value; }).concat([1]));
-    var html = '<div class="bars">' + items.slice(0, rows).map(function (d, i) {
-      return '<button class="br' + (sel ? (sel === d.key ? " on" : " dim") : "") + '"' + (act ? ' data-act="' + act + '" data-v="' + esc(d.key) + '"' : "") + tipAttr(d.label, [[sub, fmt(d.value)]]) +
+    /* keep the selected item(s) visible: if they rank below the top rows, they take the last slots with their real rank */
+    var want = sel == null ? [] : Array.isArray(sel) ? sel : [sel], shown = items.slice(0, rows);
+    var missing = want.filter(function (k) { return !shown.some(function (d) { return d.key === k; }); }).slice(0, Math.max(0, rows - 3));
+    if (missing.length) {
+      shown = shown.slice(0, rows - missing.length).concat(missing.map(function (k) {
+        var ix = -1; items.forEach(function (d, j) { if (d.key === k) ix = j; });
+        return ix < 0 ? null : { key: k, label: "#" + (ix + 1) + " " + items[ix].label, value: items[ix].value };
+      }).filter(Boolean));
+    }
+    var html = '<div class="bars">' + shown.map(function (d, i) {
+      var on = Array.isArray(sel) ? sel.indexOf(d.key) >= 0 : sel === d.key;
+      return '<button class="br' + (sel && (!Array.isArray(sel) || sel.length) ? (on ? " on" : " dim") : "") + '"' + (act ? ' data-act="' + act + '" data-v="' + esc(d.key) + '"' : "") + tipAttr(d.label, [[sub, fmt(d.value)]]) +
         '><span class="nm">' + esc(d.label) + '</span><span class="tk"><i style="width:' + (d.value / max * 100).toFixed(1) + "%;animation-delay:" + i * 45 + 'ms"></i></span><b>' + fmt(d.value) + "</b></button>";
     }).join("") + "</div>";
     return box(x, y, w, h, head(title, "<small>" + sub + "</small>") + html);
@@ -664,6 +714,66 @@ svg { display:block; overflow:visible; }
   function uniqueByMonth(rows) {
     var m = {}; rows.forEach(function (r) { var k = dates[r.di].slice(0, 7); (m[k] = m[k] || {})[r.ti] = 1; });
     return months.filter(function (k) { return m[k]; }).map(function (k) { return { key: k, label: fM(k), value: Object.keys(m[k]).length }; });
+  }
+
+
+  /* ---------------------------------------------------------------- song-focus helpers */
+  FMTS.rank = function (n) { return "#" + Math.max(1, Math.round(n)); };
+  function songAverages(stats) {
+    var a = { days: 0, pop: 0, best: 0, dur: 0, top10: 0, n: 0 };
+    Object.keys(stats).forEach(function (k) { var s = stats[k]; a.days += s.days; a.pop += s.avgPop; a.best += s.best; a.dur += tracks[s.ti].d; a.top10 += s.top10; a.n++; });
+    var n = a.n || 1; return { days: a.days / n, pop: a.pop / n, best: a.best / n, dur: a.dur / n, top10: a.top10 / n };
+  }
+  function songMonthly(ti, D) {
+    var m = {}, keys = [];
+    journeyOf(ti, D.set).forEach(function (p) { if (p.rank === null) return; var k = dates[p.di].slice(0, 7); if (!m[k]) { m[k] = { p: 0, n: 0, best: 99 }; keys.push(k); } m[k].p += p.pop; m[k].n++; if (p.rank < m[k].best) m[k].best = p.rank; });
+    return keys.map(function (k) { return { key: k, label: fM(k), pop: m[k].p / m[k].n, days: m[k].n, best: m[k].best }; });
+  }
+  /* two lines on one chart: the selected song (red) against all songs (grey, dashed) */
+  function compareLine(songPts, allPts, w, h, fmt) {
+    var keys = allPts.map(function (p) { return p.key; });
+    if (!keys.length) return '<div class="empty">No data</div>';
+    var sm = {}; songPts.forEach(function (p) { sm[p.key] = p.value; });
+    var vals = allPts.map(function (p) { return p.value; }).concat(songPts.map(function (p) { return p.value; }));
+    var lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals), sp = (hi - lo) || 1; lo -= sp * 0.15; hi = Math.min(100, hi + sp * 0.25);
+    var P = { l: 34, r: 12, t: 22, b: 20 }, n = keys.length;
+    function X(i) { return P.l + (n === 1 ? (w - P.l - P.r) / 2 : i * (w - P.l - P.r) / (n - 1)); } function Y(v) { return P.t + (1 - (v - lo) / ((hi - lo) || 1)) * (h - P.t - P.b); }
+    var s = '<svg width="' + w + '" height="' + h + '">';
+    for (var t = 0; t <= 3; t++) { var v = lo + (hi - lo) * t / 3; s += '<line class="gl" x1="' + P.l + '" x2="' + (w - P.r) + '" y1="' + Y(v) + '" y2="' + Y(v) + '"/><text class="ax" x="' + (P.l - 6) + '" y="' + (Y(v) + 3.5) + '" text-anchor="end">' + fmt(v) + "</text>"; }
+    s += '<path class="avgl" d="' + allPts.map(function (p, i) { return (i ? "L" : "M") + X(i).toFixed(1) + "," + Y(p.value).toFixed(1); }).join(" ") + '"/>';
+    var seg = [], segs = [];
+    keys.forEach(function (k, i) { if (sm[k] == null) { if (seg.length) segs.push(seg); seg = []; } else seg.push([X(i), Y(sm[k]), k]); });
+    if (seg.length) segs.push(seg);
+    segs.forEach(function (sg) {
+      var d = sg.map(function (q, j) { return (j ? "L" : "M") + q[0].toFixed(1) + "," + q[1].toFixed(1); }).join(" ");
+      s += '<path class="ln" pathLength="1" d="' + d + '"/>';
+      sg.forEach(function (q) { s += '<circle class="dt on" cx="' + q[0] + '" cy="' + q[1] + '" r="3"/>'; });
+    });
+    var every = Math.ceil(n / Math.max(2, Math.floor((w - 50) / 58))), slot = (w - P.l - P.r) / Math.max(1, n - 1);
+    allPts.forEach(function (p, i) {
+      if (i % every === 0 || i === n - 1) s += '<text class="ax" x="' + X(i) + '" y="' + (h - 5) + '" text-anchor="middle">' + esc(p.label) + "</text>";
+      s += '<g class="hp"' + tipAttr(p.label, [["This song", sm[p.key] == null ? "not in Top 50" : fmt(sm[p.key])], ["All songs", fmt(p.value)]]) + '><rect x="' + (X(i) - slot / 2) + '" y="0" width="' + slot + '" height="' + h + '" fill="transparent"/><line class="xh" x1="' + X(i) + '" x2="' + X(i) + '" y1="' + P.t + '" y2="' + (h - P.b) + '"/></g>';
+    });
+    s += '<g class="lgd"><rect x="' + (w - 196) + '" y="2" width="10" height="3" rx="1.5" fill="var(--red)"/><text x="' + (w - 182) + '" y="7">This song</text><rect x="' + (w - 118) + '" y="2" width="10" height="3" rx="1.5" fill="var(--faint)"/><text x="' + (w - 104) + '" y="7">All songs (avg)</text></g>';
+    return s + "</svg>";
+  }
+  /* song vs average: one row per measure, two bars */
+  function cmpRow(label, song, avg, fmt, lowerBetter, i) {
+    var a = lowerBetter ? 51 - song : song, b = lowerBetter ? 51 - avg : avg, mx = Math.max(a, b, 1), better = a >= b;
+    return '<div class="cmp"><div class="cmp-h"><span>' + label + '</span><b class="' + (better ? "up" : "down") + '">' + fmt(song) + "</b><small>avg " + fmt(avg) + '</small></div>' +
+      '<div class="cmp-b"><i class="s" style="width:' + (a / mx * 100).toFixed(1) + "%;animation-delay:" + i * 80 + 'ms"></i></div><div class="cmp-b"><i class="a" style="width:' + (b / mx * 100).toFixed(1) + "%;animation-delay:" + (i * 80 + 40) + 'ms"></i></div></div>';
+  }
+  function artistSpot(A, name, x, y, w, h, present) {
+    var a = null, rank = 0, sorted = A.slice().sort(function (p, q) { return q.points - p.points; });
+    sorted.forEach(function (z, i) { if (z.name === name) { a = z; rank = i + 1; } });
+    if (!a) return box(x, y, w, h, head("Artist Spotlight") + '<div class="empty">Pick a song or an artist</div>');
+    var songsOf = Object.keys(a.songs).map(function (ti) { return { ti: +ti, p: a.songs[ti] }; }).sort(function (p, q) { return q.p - p.p; }).slice(0, 3);
+    var monthly = months.map(function (m, i) { return { key: m, label: fM(m), value: a.monthly[i] }; }).filter(function (p, i) { return present[i]; });
+    return box(x, y, w, h, head("Artist Spotlight", '<small>' + (S.x.artist ? "filtering every page" : "artist of the selected song") + "</small>") +
+      '<div class="asp"><div class="asp-top">' + avatar(a.name, 40) + '<div style="min-width:0"><b>' + esc(a.name) + '</b><small>#' + rank + " by chart points · best rank #" + a.best + "</small></div></div>" +
+      '<div class="asp-st"><div><span>Songs</span>' + count(a.ns, "i") + '</div><div><span>Points</span>' + count(a.points, "k") + '</div><div><span>Days</span>' + count(a.days, "i") + '</div><div><span>Days #1</span>' + count(a.no1, "i") + "</div></div>" +
+      '<div class="asp-ch">' + lineChart(monthly, w - 26, 78, fK, null, null, { minZero: true, name: "Chart points", labels: false }) + "</div>" +
+      '<div class="asp-songs">' + songsOf.map(function (s) { var t = tracks[s.ti]; return '<button data-act="pick" data-v="' + s.ti + '">' + cover(t, 22, 5) + "<span>" + esc(t.t) + "</span><b>" + fK(s.p) + "</b></button>"; }).join("") + "</div></div>");
   }
 
   /* ---------------------------------------------------------------- HOME (landing) */
@@ -695,78 +805,106 @@ svg { display:block; overflow:visible; }
   function overview() {
     var rows = rowsFor(), k = kpis(rows), stats = trackStats(rows), D = daySet(rows);
     var rowsM = rowsFor(["month"]), rowsT = rowsFor(["type"]), rowsC = rowsFor(["content"]);
+    var focus = S.focus && S.track != null && stats[S.track] ? S.track : null, ft = focus != null ? tracks[focus] : null, fs = focus != null ? stats[focus] : null;
     var types = [0, 0, 0], cont = [0, 0], collab = [0, 0], yr = { "2024": 0, "2023": 0, "Older": 0 };
     rowsT.forEach(function (r) { types[r.type]++; });
     rowsC.forEach(function (r) { cont[r.ex]++; });
     rows.forEach(function (r) { collab[tracks[r.ti].c]++; var y = tracks[r.ti].r.slice(0, 4); yr[y === "2024" || y === "2023" ? y : "Older"]++; });
     var C3 = ["var(--red)", "var(--ink2)", "var(--grey)"];
     var arts = artistStats(rows).sort(function (a, b) { return b.ns - a.ns || b.points - a.points; }).map(function (a) { return { key: a.name, label: a.name, value: a.ns }; });
-    var songs = ordered(stats).map(function (s) { return { key: String(s.ti), label: tracks[s.ti].t, value: s.points }; });
-    return songList(stats, 0, 612) +
-      kpiTile(248, 0, 230, 70, "Unique Songs", k.tracks, "i", fI(k.newSongs) + " new in period", 1) +
-      kpiTile(248, 78, 230, 70, "Unique Artists", k.artists, "i", "each collaborator counted", 2) +
-      kpiTile(248, 156, 230, 70, "Avg Track Duration", k.dur, "dur", "minutes : seconds", 3) +
-      kpiTile(248, 234, 230, 70, "Average Popularity", k.avgPop, "d1", "score out of 100", 4) +
-      player(stats, 486, 0, 252, 304, D.n) +
-      bars(248, 312, 230, 300, "Top Artists", "songs", arts, fI, "artist", S.x.artist) +
-      bars(486, 312, 252, 300, "Top Songs", "chart points", songs, fK, "pick", null) +
-      miniDonut(746, 0, "Songs by Album Type", [{ key: 0, label: "Album", value: types[0] }, { key: 1, label: "Single", value: types[1] }, { key: 2, label: "Compilation", value: types[2] }], C3, "type", S.x.type) +
-      miniDonut(1001, 0, "Explicit vs Clean", [{ key: "Explicit", label: "Explicit", value: cont[1] }, { key: "Clean", label: "Clean", value: cont[0] }], C3, "content", S.x.content) +
-      miniDonut(746, 104, "Songs by Release Year", [{ key: "2024", label: "2024", value: yr["2024"] }, { key: "2023", label: "2023", value: yr["2023"] }, { key: "Older", label: "Older", value: yr.Older }], C3) +
-      miniDonut(1001, 104, "Solo vs Collaboration", [{ key: 1, label: "Collab", value: collab[1] }, { key: 0, label: "Solo", value: collab[0] }], C3) +
-      box(746, 208, 502, 196, head("Average Song Popularity by Month", "<small>click a month to filter</small>") + lineChart(series(rowsM, "month", "pop"), 476, 158, function (v) { return v.toFixed(1); }, "month", S.x.month, { name: "Avg popularity" })) +
-      box(746, 412, 502, 200, head("Unique Songs by Month", "<small>click a month to filter</small>") + columnChart(uniqueByMonth(rowsM), 476, 164, fI, "month", S.x.month, "Unique songs"));
+    var songsB = ordered(stats).map(function (s) { return { key: String(s.ti), label: tracks[s.ti].t, value: s.points }; });
+    var html = songList(stats, 0, 612) + player(stats, 486, 0, 252, 304, D.n);
+    if (ft) {
+      /* ---------- SONG FOCUS: every panel answers "how did this song do?" */
+      var av = songAverages(stats), fy = ft.r.slice(0, 4), fyKey = fy === "2024" || fy === "2023" ? fy : "Older";
+      var sm = songMonthly(focus, D), allPop = series(rowsM, "month", "pop");
+      html +=
+        kpiTile(248, 0, 230, 70, "Days on Chart", fs.days, "i", "avg song " + av.days.toFixed(0) + " days", 1) +
+        kpiTile(248, 78, 230, 70, "Best Rank", fs.best, "rank", fs.no1 ? fs.no1 + " days at #1" : fs.top10 + " days in Top 10", 2) +
+        kpiTile(248, 156, 230, 70, "Avg Popularity", fs.avgPop, "d1", "chart avg " + k.avgPop.toFixed(1), 3) +
+        kpiTile(248, 234, 230, 70, "Song Length", ft.d, "dur", "avg song " + fDur(av.dur), 4) +
+        bars(248, 312, 230, 300, "Top Artists", "songs", arts, fI, "artist", credits[focus]) +
+        bars(486, 312, 252, 300, "Top Songs", "chart points", songsB, fK, "pick", String(focus)) +
+        miniDonut(746, 0, "Album Type · this song: " + TYPES[ft.y], [{ key: 0, label: "Album", value: types[0] }, { key: 1, label: "Single", value: types[1] }, { key: 2, label: "Compilation", value: types[2] }], C3, "type", ft.y) +
+        miniDonut(1001, 0, "Content · this song: " + (ft.x ? "Explicit" : "Clean"), [{ key: "Explicit", label: "Explicit", value: cont[1] }, { key: "Clean", label: "Clean", value: cont[0] }], C3, "content", ft.x ? "Explicit" : "Clean") +
+        miniDonut(746, 104, "Release Year · this song: " + fy, [{ key: "2024", label: "2024", value: yr["2024"] }, { key: "2023", label: "2023", value: yr["2023"] }, { key: "Older", label: "Older", value: yr.Older }], C3, null, fyKey) +
+        miniDonut(1001, 104, "Solo / Collab · this song: " + (ft.c ? "Collab" : "Solo"), [{ key: 1, label: "Collab", value: collab[1] }, { key: 0, label: "Solo", value: collab[0] }], C3, null, ft.c) +
+        box(746, 208, 502, 196, head("Popularity: This Song vs All Songs", "<small>hover a month</small>") + compareLine(sm.map(function (p) { return { key: p.key, value: p.pop }; }), allPop, 476, 158, function (v) { return v.toFixed(1); })) +
+        box(746, 412, 502, 200, head("Rank Journey · " + esc(ft.t), "<small>#1 at the top · hover a day</small>") + rankJourney(journeyOf(focus, D.set), 476, 164));
+    } else {
+      html +=
+        kpiTile(248, 0, 230, 70, "Unique Songs", k.tracks, "i", fI(k.newSongs) + " new in period", 1) +
+        kpiTile(248, 78, 230, 70, "Unique Artists", k.artists, "i", "each collaborator counted", 2) +
+        kpiTile(248, 156, 230, 70, "Avg Track Duration", k.dur, "dur", "minutes : seconds", 3) +
+        kpiTile(248, 234, 230, 70, "Average Popularity", k.avgPop, "d1", "score out of 100", 4) +
+        bars(248, 312, 230, 300, "Top Artists", "songs", arts, fI, "artist", S.x.artist) +
+        bars(486, 312, 252, 300, "Top Songs", "chart points", songsB, fK, "pick", null) +
+        miniDonut(746, 0, "Songs by Album Type", [{ key: 0, label: "Album", value: types[0] }, { key: 1, label: "Single", value: types[1] }, { key: 2, label: "Compilation", value: types[2] }], C3, "type", S.x.type) +
+        miniDonut(1001, 0, "Explicit vs Clean", [{ key: "Explicit", label: "Explicit", value: cont[1] }, { key: "Clean", label: "Clean", value: cont[0] }], C3, "content", S.x.content) +
+        miniDonut(746, 104, "Songs by Release Year", [{ key: "2024", label: "2024", value: yr["2024"] }, { key: "2023", label: "2023", value: yr["2023"] }, { key: "Older", label: "Older", value: yr.Older }], C3) +
+        miniDonut(1001, 104, "Solo vs Collaboration", [{ key: 1, label: "Collab", value: collab[1] }, { key: 0, label: "Solo", value: collab[0] }], C3) +
+        box(746, 208, 502, 196, head("Average Song Popularity by Month", "<small>click a song for its own view</small>") + lineChart(series(rowsM, "month", "pop"), 476, 158, function (v) { return v.toFixed(1); }, "month", S.x.month, { name: "Avg popularity" })) +
+        box(746, 412, 502, 200, head("Unique Songs by Month", "<small>click a month to filter</small>") + columnChart(uniqueByMonth(rowsM), 476, 164, fI, "month", S.x.month, "Unique songs"));
+    }
+    return html;
   }
 
   /* ---------------------------------------------------------------- ARTISTS */
   function artists() {
     var rows = rowsFor(), rowsA = rowsFor(["artist"]), stats = trackStats(rows), D = daySet(rows);
-    var A = artistStats(rowsA);
+    var A = artistStats(rowsA), ti = selected(stats);
+    var hl = S.x.artist ? S.x.artist : ti != null ? credits[ti] : null;
+    var spotName = S.x.artist || (ti != null ? credits[ti][0] : null);
     function top(key) { return A.slice().sort(function (a, b) { return b[key] - a[key] || b.points - a.points; }).filter(function (a) { return a[key] > 0; }).map(function (a) { return { key: a.name, label: a.name, value: a[key] }; }); }
-    var cols = [["name", "Artist"], ["ns", "Songs"], ["points", "Chart points"], ["days", "Days charted"], ["no1", "Days at #1"], ["best", "Best rank"], ["collabShare", "Collab"], ["trend", "Trend"]];
+    var cols = [["name", "Artist"], ["ns", "Songs"], ["points", "Chart points"], ["no1", "Days #1"], ["best", "Best"], ["trend", "Trend"]];
     var list = A.slice().sort(function (a, b) { return S.asort === "best" ? a.best - b.best : S.asort === "name" ? a.name.localeCompare(b.name) : (b[S.asort] - a[S.asort]) || b.points - a.points; }).slice(0, 80);
     var maxP = Math.max.apply(null, A.map(function (a) { return a.points; }).concat([1]));
     var present = {}; rowsA.forEach(function (r) { present[monthOfDay[r.di]] = 1; });
+    var isHl = function (n) { return Array.isArray(hl) ? hl.indexOf(n) >= 0 : hl === n; };
     var table = '<div class="tbl"><table><thead><tr>' + cols.map(function (c) { return '<th class="' + (S.asort === c[0] ? "on" : "") + '"' + (c[0] !== "trend" ? ' data-act="asort" data-v="' + c[0] + '"' : "") + ">" + c[1] + "</th>"; }).join("") + "</tr></thead><tbody>" +
       list.map(function (a, i) {
-        return '<tr class="' + (S.x.artist === a.name ? "on" : "") + '" data-act="artist" data-v="' + esc(a.name) + '" style="animation-delay:' + Math.min(i, 14) * 25 + 'ms"><td><div class="who">' + avatar(a.name, 24) + "<span>" + esc(a.name) + "</span></div></td><td>" + a.ns +
-          '</td><td><span class="cellbar"><i style="width:' + Math.max(3, a.points / maxP * 90) + 'px"></i>' + fK(a.points) + "</span></td><td>" + fI(a.days) + "</td><td>" + (a.no1 ? '<span class="tag r">' + a.no1 + "</span>" : "–") + "</td><td>#" + a.best + "</td><td>" + fP(a.collabShare, 0) +
-          "</td><td>" + spark(a.monthly.filter(function (v, mi) { return present[mi]; }), 90, 20) + "</td></tr>";
+        return '<tr class="' + (isHl(a.name) ? "on" : "") + '" data-act="artist" data-v="' + esc(a.name) + '" style="animation-delay:' + Math.min(i, 14) * 25 + 'ms"><td><div class="who" style="max-width:190px">' + avatar(a.name, 24) + "<span>" + esc(a.name) + "</span></div></td><td>" + a.ns +
+          '</td><td><span class="cellbar"><i style="width:' + Math.max(3, a.points / maxP * 70) + 'px"></i>' + fK(a.points) + "</span></td><td>" + (a.no1 ? '<span class="tag r">' + a.no1 + "</span>" : "–") + "</td><td>#" + a.best +
+          "</td><td>" + spark(a.monthly.filter(function (v, mi) { return present[mi]; }), 80, 20) + "</td></tr>";
       }).join("") + "</tbody></table></div>";
     return songList(stats, 0, 612) +
-      bars(248, 0, 246, 300, "Top Artists by Song Count", "songs", top("ns"), fI, "artist", S.x.artist) +
-      bars(502, 0, 246, 300, "Top Artists by Chart Points", "points", top("points"), fK, "artist", S.x.artist) +
-      bars(756, 0, 246, 300, "Top Artists by #1 Hits", "days at #1", top("no1"), fI, "artist", S.x.artist) +
+      bars(248, 0, 246, 300, "Top Artists by Song Count", "songs", top("ns"), fI, "artist", hl) +
+      bars(502, 0, 246, 300, "Top Artists by Chart Points", "points", top("points"), fK, "artist", hl) +
+      bars(756, 0, 246, 300, "Top Artists by #1 Hits", "days at #1", top("no1"), fI, "artist", hl) +
       player(stats, 1010, 0, 238, 300, D.n) +
-      box(248, 308, 1000, 304, head("Artist Performance", "<small>click a column to sort · click a row to filter every page</small>") + table);
+      box(248, 308, 616, 304, head("Artist Performance", "<small>sort by column · click a row to filter</small>") + table) +
+      artistSpot(A, spotName, 872, 308, 376, 304, present);
   }
 
   /* ---------------------------------------------------------------- SONGS */
   function songs() {
     var rows = rowsFor(), stats = trackStats(rows), D = daySet(rows), ti = selected(stats);
     if (ti == null) return songList(stats, 0, 612) + box(248, 0, 1000, 612, '<div class="empty">No songs match these filters</div>');
-    var t = tracks[ti], s = stats[ti], pts = journeyOf(ti, D.set);
-    var mm = {}, mx = {}, mn = {};
-    rows.forEach(function (r) { var z = mm[r.ti] || (mm[r.ti] = 1); mx[r.ti] = Math.max(mx[r.ti] || 0, r.pop); mn[r.ti] = Math.min(mn[r.ti] == null ? 999 : mn[r.ti], r.pop); });
-    var monthly = {}, keys = [];
-    pts.forEach(function (p) { if (p.rank === null) return; var k = dates[p.di].slice(0, 7); if (!monthly[k]) { monthly[k] = { s: 0, n: 0 }; keys.push(k); } monthly[k].s += p.pop; monthly[k].n++; });
-    var popM = keys.map(function (k) { return { key: k, label: fM(k), value: monthly[k].s / monthly[k].n }; });
-    var cols = [["t", "Song"], ["a", "Artist"], ["yr", "Year"], ["ty", "Type"], ["avgPop", "Avg pop."], ["mx", "Max pop."], ["mn", "Min pop."], ["best", "Best"], ["days", "Days"], ["no1", "Days #1"], ["d", "Length"]];
-    var list = Object.keys(stats).map(function (k2) { var z = stats[k2], tr = tracks[z.ti]; return { ti: z.ti, t: tr.t, a: tr.a, yr: tr.r.slice(0, 4), ty: TYPES[tr.y], avgPop: z.avgPop, mx: mx[z.ti], mn: mn[z.ti], best: z.best, days: z.days, no1: z.no1, d: tr.d }; });
+    var t = tracks[ti], s = stats[ti], pts = journeyOf(ti, D.set), av = songAverages(stats), sm = songMonthly(ti, D);
+    var cols = [["t", "Song"], ["a", "Artist"], ["ty", "Type"], ["avgPop", "Pop."], ["best", "Best"], ["days", "Days"], ["no1", "#1 days"]];
+    var list = Object.keys(stats).map(function (k2) { var z = stats[k2], tr = tracks[z.ti]; return { ti: z.ti, t: tr.t, a: tr.a, ty: TYPES[tr.y], avgPop: z.avgPop, best: z.best, days: z.days, no1: z.no1 }; });
     var key = S.ssort, asc = key === "best" || key === "t" || key === "a" || key === "ty";
     list.sort(function (a, b) { var x = a[key], y = b[key]; return (typeof x === "string" ? x.localeCompare(y) : x - y) * (asc ? 1 : -1) || b.days - a.days; });
     var table = '<div class="tbl"><table><thead><tr>' + cols.map(function (c) { return '<th class="' + (key === c[0] ? "on" : "") + '" data-act="ssort" data-v="' + c[0] + '">' + c[1] + "</th>"; }).join("") + "</tr></thead><tbody>" +
       list.slice(0, 120).map(function (r, i) {
-        return '<tr class="' + (r.ti === ti ? "on" : "") + '" data-act="pick" data-v="' + r.ti + '" style="animation-delay:' + Math.min(i, 14) * 25 + 'ms"><td><div class="who" style="max-width:250px">' + cover(tracks[r.ti], 24, 5) + "<span>" + esc(r.t) + '</span></div></td><td style="max-width:150px;overflow:hidden;text-overflow:ellipsis">' + esc(r.a) + "</td><td>" + r.yr + '</td><td><span class="tag' + (r.ty === "Single" ? " r" : "") + '">' + r.ty + "</span></td><td>" + r.avgPop.toFixed(1) + "</td><td>" + r.mx + "</td><td>" + r.mn + "</td><td>#" + r.best + "</td><td>" + r.days + "</td><td>" + (r.no1 || "–") + "</td><td>" + fDur(r.d) + "</td></tr>";
+        return '<tr class="' + (r.ti === ti ? "on" : "") + '" data-act="pick" data-v="' + r.ti + '" style="animation-delay:' + Math.min(i, 14) * 25 + 'ms"><td><div class="who" style="max-width:170px">' + cover(tracks[r.ti], 24, 5) + "<span>" + esc(r.t) + '</span></div></td><td style="max-width:110px;overflow:hidden;text-overflow:ellipsis">' + esc(r.a) + '</td><td><span class="tag' + (r.ty === "Single" ? " r" : "") + '">' + r.ty + "</span></td><td>" + r.avgPop.toFixed(1) + "</td><td>#" + r.best + "</td><td>" + r.days + "</td><td>" + (r.no1 || "–") + "</td></tr>";
       }).join("") + "</tbody></table></div>";
     var detail = '<div class="detail">' + cover(t, 94, 12) + '<div style="min-width:0;flex:1"><h1>' + esc(t.t) + "</h1><p>" + esc(t.a) + "</p>" +
       '<span class="tag">' + TYPES[t.y] + '</span> <span class="tag">' + (t.x ? "Explicit" : "Clean") + '</span> <span class="tag">' + fDur(t.d) + '</span> <span class="tag">Released ' + fD(t.r) + "</span></div>" +
       '<div class="stats"><div class="stat r"><span>Best rank</span><strong>#' + s.best + '</strong></div><div class="stat"><span>Days on chart</span>' + count(s.days, "i") + '</div><div class="stat"><span>Days at #1</span>' + count(s.no1, "i") + '</div><div class="stat"><span>Avg popularity</span>' + count(s.avgPop, "d0") + "</div></div></div>";
+    var daysM = sm.map(function (p) { return { key: p.key, label: p.label, value: p.days }; });
+    var cmp = '<div class="cmps">' +
+      cmpRow("Days on chart", s.days, av.days, function (v) { return Math.round(v); }, false, 0) +
+      cmpRow("Best rank", s.best, av.best, function (v) { return "#" + Math.round(v); }, true, 1) +
+      cmpRow("Days in Top 10", s.top10, av.top10, function (v) { return Math.round(v); }, false, 2) +
+      cmpRow("Avg popularity", s.avgPop, kpis(rows).avgPop, function (v) { return v.toFixed(1); }, false, 3) + "</div>" +
+      '<div class="cmp-legend"><i class="s"></i>This song <i class="a"></i>Average song in this selection</div>';
     return songList(stats, 0, 612) +
       box(248, 0, 1000, 118, detail) +
       box(248, 126, 616, 200, head("Rank Journey", "<small>#1 at the top · hover a day</small>") + rankJourney(pts, 590, 162)) +
-      box(872, 126, 376, 200, head("Popularity by Month") + lineChart(popM, 350, 162, function (v) { return v.toFixed(0); }, null, null, { cap: 100, name: "Avg popularity" })) +
-      box(248, 334, 1000, 278, head("All Songs", "<small>click a column to sort · click a row to open the song</small>") + table);
+      box(872, 126, 376, 200, head("Days in Top 50 per Month", "<small>" + sm.length + " months charted</small>") + columnChart(daysM, 350, 162, fI, "month", null, "Days in Top 50")) +
+      box(248, 334, 616, 278, head("All Songs", "<small>sort by column · click a row to open it</small>") + table) +
+      box(872, 334, 376, 278, head("This Song vs the Average Song") + cmp);
   }
 
   /* ---------------------------------------------------------------- CHIPS, DRAWER */
@@ -780,6 +918,7 @@ svg { display:block; overflow:visible; }
     if (S.x.type != null) c.push(["x", "type", "", "Type: " + TYPES[S.x.type]]);
     if (S.x.content) c.push(["x", "content", "", S.x.content]);
     if (S.x.artist) c.push(["x", "artist", "", "Artist: " + S.x.artist]);
+    if (S.focus && S.track != null && S.tab === "overview") c.push(["s", "focus", "", "Song: " + tracks[S.track].t]);
     if (!c.length) return '<span class="hint">No filters applied · use Filters, or click a bar, slice, month or row to cross-filter</span>';
     return c.map(function (z) { return '<button class="chip" data-act="rm" data-k="' + z[0] + '" data-f="' + z[1] + '" data-v="' + esc(z[2]) + '">' + esc(z[3]) + " <b>×</b></button>"; }).join("");
   }
@@ -817,20 +956,18 @@ svg { display:block; overflow:visible; }
     }
     tipEl = document.getElementById("tip");
     var pl = document.getElementById("plist"); if (pl && sc) pl.scrollTop = sc;
+    function reveal(box, el) { if (!box || !el) return; var t = el.offsetTop - box.offsetTop, b = t + el.offsetHeight; if (t < box.scrollTop || b > box.scrollTop + box.clientHeight) box.scrollTop = Math.max(0, t - box.clientHeight / 3); }
+    reveal(pl, pl && pl.querySelector(".song.on"));
+    var tb = root.querySelectorAll(".tbl"); for (var q = 0; q < tb.length; q++) reveal(tb[q], tb[q].querySelector("tr.on"));
     if (focusId) { var fe = document.getElementById(focusId); if (fe) { fe.focus(); var v = fe.value; fe.value = ""; fe.value = v; } }
     animateCounts();
   }
-  /* only the player + the highlighted song change: no full redraw, so the charts stay still */
+  /* picking a song redraws the page: on Overview it switches to song focus, everything animates */
   function swapSong(ti) {
     S.track = ti;
-    if (S.tab === "songs") { render(false); return; }
-    var rows = rowsFor(), stats = trackStats(rows), D = daySet(rows), old = document.getElementById("player");
-    if (!old) { render(false); return; }
-    var x = parseInt(old.style.left), y = parseInt(old.style.top), w = parseInt(old.style.width), h = parseInt(old.style.height);
-    var tmp = document.createElement("div"); tmp.innerHTML = player(stats, x, y, w, h, D.n);
-    old.parentNode.replaceChild(tmp.firstChild, old);
-    var list = root.querySelectorAll(".song"); for (var i = 0; i < list.length; i++) list[i].classList.toggle("on", +list[i].getAttribute("data-v") === ti);
-    var on = root.querySelector(".song.on"); if (on && on.scrollIntoView) on.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    if (S.tab === "overview") S.focus = true;
+    hideTip(); render(false);
+    var on = root.querySelector(".song.on"); if (on && on.scrollIntoView) on.scrollIntoView({ block: "nearest" });
   }
   function step(dir) {
     var rows = rowsFor(), stats = trackStats(rows), o = ordered(stats).map(function (z) { return z.ti; });
@@ -869,14 +1006,14 @@ svg { display:block; overflow:visible; }
     }
     if (a === "tab") { stopPlay(); S.tab = v; S.q = ""; }
     else if (a === "theme") { S.theme = S.theme === "dark" ? "light" : "dark"; try { localStorage.setItem("ytm-theme", S.theme); } catch (er) { } }
-    else if (a === "reset") { S.f = { months: [], types: [], content: [], bands: [] }; S.x = {}; }
+    else if (a === "reset") { S.f = { months: [], types: [], content: [], bands: [] }; S.x = {}; S.focus = false; }
     else if (a === "drawer") { S.drawer = true; S.drawerOpen = false; S.draft = JSON.parse(JSON.stringify(S.f)); document.getElementById("drw").innerHTML = drawerHtml(); S.drawerOpen = true; return; }
     else if (a === "close") { S.drawer = false; document.getElementById("drw").innerHTML = ""; return; }
     else if (a === "dt") { var f = el.getAttribute("data-f"), val = f === "types" ? +v : v, arr = S.draft[f], ix = arr.indexOf(val); if (ix >= 0) arr.splice(ix, 1); else arr.push(val); }
     else if (a === "yall") { var ms = months.filter(function (m) { return m.slice(0, 4) === v; }), allOn = ms.every(function (m) { return S.draft.months.indexOf(m) >= 0; }); S.draft.months = S.draft.months.filter(function (m) { return m.slice(0, 4) !== v; }); if (!allOn) S.draft.months = S.draft.months.concat(ms); }
     else if (a === "dclear") { S.draft = { months: [], types: [], content: [], bands: [] }; }
     else if (a === "apply") { S.f = S.draft; S.drawer = false; S.drawerOpen = false; }
-    else if (a === "rm") { var k = el.getAttribute("data-k"), fl = el.getAttribute("data-f"); if (k === "x") delete S.x[fl]; else S.f[fl] = S.f[fl].filter(function (z) { return String(z) !== v; }); }
+    else if (a === "rm") { var k = el.getAttribute("data-k"), fl = el.getAttribute("data-f"); if (k === "s") S.focus = false; else if (k === "x") delete S.x[fl]; else S.f[fl] = S.f[fl].filter(function (z) { return String(z) !== v; }); }
     else if (a === "artist") { toggleX("artist", v); }
     else if (a === "type") { toggleX("type", +v); }
     else if (a === "content") { toggleX("content", v); }
